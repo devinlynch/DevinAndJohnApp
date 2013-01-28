@@ -1,7 +1,6 @@
 DevinAndJohnApp
 ===============
-Project Milestones:
-    
+
     Project Description:
     --------------------
     We are planning on building a social network.  This social network acts as a place for people to see what other
@@ -20,7 +19,7 @@ Project Milestones:
     3. Finish server-side code(February 25th).
     4. Finish client-side Framework demo (running application skeleton)(March 4th).
     5. Facebook integreation and user login (March 4th).
-    6. Working prototype/demo(March 11th).
-    7. Testing (March 18th).
+    6. Adding additional features (March 11th).
+    7. Working prototype/demo(March 18th).
     8. Draft documentation(March 25th).
     9. Final code and documentation (April 10th).
