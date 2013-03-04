@@ -1,4 +1,3 @@
-
 // A function which returns a database object which has numerous
 // prototypes for making queries to the database. 
 function theDatabase(){
@@ -8,7 +7,7 @@ function theDatabase(){
 	var connection = mysql.createConnection({
 	  host     : 'localhost',
 	  user     : 'root',
-	  password : 'ddnddn',
+	  password : 'pass',
 	  database : 'n23n7wfhs9a99dd3',
 	});
 	
