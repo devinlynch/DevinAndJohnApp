@@ -5,8 +5,6 @@
 
 var express = require('express')
   , routes = require('./routes')
-  , user = require('./routes/user')
-  , info = require('./routes/info')
   , http = require('http')
   , path = require('path')
   , db = require("./totallyLegitDB");
@@ -14,7 +12,7 @@ var express = require('express')
 var app = express();
 
 app.configure(function(){
-  app.set('port', process.env.PORT || 4004);
+  app.set('port', process.env.PORT || 4005);
   app.set('views', __dirname + '/views');
   app.set('view engine', 'jade');
   app.use(express.favicon());
@@ -33,25 +31,14 @@ app.configure('development', function(){
 });
 
 app.get('/', function(req, res, next){
-    if(req.session.username){
-        res.redirect("/users");
-    }else{
         routes.index(req, res, next);
-    }
 });
-app.get('/users', db.isAuthenticated, user.list);
-
-app.get('/info', db.isAuthenticated, info.list);
 
 app.post("/login", function(req,res){
     db.login(req, req.body.username);
     res.redirect("/users");
 });
 
-app.post("/update", function(req,res){
-    db.information(req, req.body.usernameIn, req.body.nameIn, req.body.addressIn, req.body.emailIn, req.body.invisibleIn);
-    res.redirect("/info");
-});
 app.post("/logout", function(req,res){
     db.logout(req);
     res.redirect("/");
