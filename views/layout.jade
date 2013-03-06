@@ -1,7 +1,13 @@
 doctype 5
 html
-  head
-    title= title
-    link(rel='stylesheet', href='/stylesheets/style.css')
-  body
-    block content
+	head
+		title= title
+		link(rel='stylesheet', href='/stylesheets/style.css')
+		script(src='http://code.jquery.com/jquery-latest.js')
+		
+	body
+		a(href="/") Home
+		br
+		a(href="/upload_content") Upload Content
+		block content
+
