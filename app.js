@@ -8,7 +8,9 @@ var express = require('express')
   , upload = require('./routes/upload')
   , db = require('./db')
   , http = require('http')
-  , path = require('path');
+  , path = require('path')
+  , im = require('imagemagick');
+;
 var app = express();
 var fs = require('fs');
 
@@ -24,6 +26,7 @@ app.configure(function(){
   app.use(express.logger('dev'));
   app.use(express.bodyParser());
   app.use(express.methodOverride());
+  app.use("/public", express.static(__dirname + '/public'));
   app.use(express.cookieParser());
   app.use(express.session({ secret: 'keyboard cat'}));
   app.use(app.router);
@@ -58,20 +61,34 @@ app.post('/upload',  function(req, res) {
         });
     });
 	
-	// Generates a new content object to be put into the database
-	newContent = {
-		Title: req.body.theName,
-		FileName: req.files.theImage.name,
-		UploaderID: 0,
-		CategoryID: 1,
-		Likes: 0,
-		Dislikes: 0
+	
+	// Function to create new object for content and content image and then send to database
+	addToDatabase = function(width, height){
+		// Generates a new content object to be put into the database
+		var newContent = {
+			Title: req.body.theName,
+			UploaderID: 1,
+			CategoryID: req.body.categories,
+			Likes: 0,
+			Dislikes: 0
+		};
+		
+		var contentImage = {
+			FileName: req.files.theImage.name,
+			Height: height,
+			Width: width
+		};
+		theDB.addContent(newContent, contentImage);
+
+		console.log(contentImage.FileName + ' ' + contentImage.Height);
 	};
 	
-	// Adds content to database
-	theDB.addContent(newContent);
+	// Gets the correct width and height of the image
+	im.identify(target_path, function(err, features){
+		if (err) throw err
+		addToDatabase(features.width, features.height);
+	})
 	
-	console.log(req.body.theName);
 	res.redirect("/upload_content");
 });
 

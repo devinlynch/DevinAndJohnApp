@@ -5,7 +5,18 @@ var db = database.database();
 exports.index = function(req, res){
 	console.log('Test');
 	
+	// Function to do remainder of work after db query is finished
+	doOtherStuff = function(theContent){
+			res.render("index.jade", { title: 'Home', variable:{content: theContent} });
+	};
 	
+	// Gets the categories from the database
+	db.getContent(0, 10, 'Content.DateTime', function(theContent) {
+		for(var i = 0; i<theContent.length; i++){
+			console.log('The content info is: ', theContent[i].CategoryID);
+		}
+		doOtherStuff(theContent);
+  	});
 	
 	// Performs a query for getting the first user
 	db.getUsers(0, 1, 'UserID', function(theContent) {
@@ -13,7 +24,7 @@ exports.index = function(req, res){
   	});
 	
 	// Performs a query for getting the first content
-	db.getContent(0, 2, 'ContentID', function(theContent) {
+	db.getContent(0, 2, 'Content.ContentID', function(theContent) {
 		console.log('The content is: ', theContent[0]);
   	});
 	
@@ -54,5 +65,4 @@ exports.index = function(req, res){
 	
 
 	
-	res.render('index', { title: 'Hello' });
 };
