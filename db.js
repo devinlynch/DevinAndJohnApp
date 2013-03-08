@@ -31,9 +31,10 @@ function getDatabase(){
 	// Function which gets a specific number of content from the database
 	// Takes start number, number of rows, order, and a callback
 	db.getContent = function(start, num, order, callback) {
-		var query = 'SELECT * from Content ORDER BY ' + order +  ' LIMIT ' + start + ', ' + num;
+		var query = 'SELECT * from Content JOIN ContentImages ON Content.ContentID = ' +
+		'ContentImages.ContentID ORDER BY ' + order +  ' LIMIT ' + start + ', ' + num;
 		connection.query(query, function(err, rows, fields) {
-		  if (err){ console.log('ERROR CONNECTING TO MYSQL'); callback(undefined); throw err;};
+		  if (err){ console.log('ERROR CONNECTING TO MYSQL for db.getCotent - ' +err); callback(undefined); throw err;};
 		  
 		  callback(rows);
 	
@@ -118,12 +119,37 @@ function getDatabase(){
 	}
 	
 	// Function which adds content to the database
-	db.addContent = function(content) {
-		connection.query('INSERT INTO Content SET ?', content, function(err, rows, fields) {
+	db.addContent = function(content, image) {
+		connection.query('INSERT INTO Content SET ?', content, function(err, result) {
+		  if (err){ console.log('ERROR CONNECTING TO MYSQL');  throw err;};
+		  image.ContentID = result.insertId;
+		  
+		  //Now calls for adding the image to the content image table
+		  db.addContentImage(image);
+		});
+	}
+	
+	// Function which adds content to the database
+	db.addContentImage = function(image) {
+		connection.query('INSERT INTO ContentImages SET ?', image, function(err, rows, fields) {
 		  if (err){ console.log('ERROR CONNECTING TO MYSQL');  throw err;};
 		  	
 		});
 	}
+	
+	// Function which adds content to the database
+	db.getSpecificContent = function(contentID, callback) {
+		connection.query('SELECT * FROM Content JOIN ContentImages ON Content.ContentID = ContentImages.ContentID' +
+		'AND Content.ContentID =? LIMIT 1', contentID, function(err, rows, fields) {
+		  if (err){ console.log('ERROR CONNECTING TO MYSQL');  throw err;};
+		  if(rows != undefined)
+		  	callback(rows[0]);		  
+		  
+		});
+	}
+	
+	
+
 	
 	
 	
