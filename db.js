@@ -41,6 +41,18 @@ function getDatabase(){
 		});
 	}
 
+	// Function which gets a specific number of content for a specific category
+	db.getContentForCategory = function(start, num, categoryID, order, callback) {
+		var query = 'SELECT * from Content JOIN ContentImages ON Content.ContentID = ' +
+		'ContentImages.ContentID WHERE Content.CategoryID=' + categoryID + ' ORDER BY ' + order +  ' LIMIT ' + start + ', ' + num;
+		connection.query(query, function(err, rows, fields) {
+		  if (err){ console.log('ERROR CONNECTING TO MYSQL for db.getCotent - ' +err); callback(undefined); throw err;};
+		  
+		  callback(rows);
+	
+		});
+	}
+
 	// Function which gets users info by the userID
 	db.getUser = function(userID, callback) {
 		var query = 'SELECT * from Users JOIN BasicInfo ON Users.userID = BasicInfo.userID'  
@@ -143,6 +155,19 @@ function getDatabase(){
 	
 		});
 	}
+
+	// Function which gets a single categores
+	db.getCategory= function(category, callback) {
+		var query = 'SELECT * from Categories WHERE Name=?';
+		connection.query(query, category, function(err, rows, fields) {
+		  if (err){ console.log('ERROR CONNECTING TO MYSQL: ' +err); callback(undefined); throw err;};
+		  if(rows != undefined)
+		  	callback(rows[0]);
+		  else
+		  	callback(undefined)
+	
+		});
+	}
 	
 	// Function which adds content to the database
 	db.addContent = function(content, image) {
@@ -173,13 +198,10 @@ function getDatabase(){
 		  
 		});
 	}
-	
-	
 
-	
-	
-	
-	
+	db.errorCheck = function(query){
+		return true;
+	}
 		
 	return db;	
 }

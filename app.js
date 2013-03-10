@@ -5,8 +5,8 @@
 
 var express = require('express')
   , routes = require('./routes')
-  , upload = require('./routes/upload')
   , user = require('./routes/user')
+  , pages = require('./routes/pages')
   , db = require('./db')
   , http = require('http')
   , path = require('path')
@@ -15,6 +15,7 @@ var express = require('express')
 var app = express();
 var fs = require('fs');
 
+var theDb = db.database();
 
 var  Alleup = require('alleup');
 var alleup = new Alleup({storage : "aws", config_file: "alleup_config.json"})
@@ -43,13 +44,56 @@ app.get('/', function(req, res, next){
   routes.index(req, res, next);
 });
 
-app.get('/upload_content', upload.uploadContent);
+app.get('/upload_content', pages.uploadContent);
 
-app.get('/users/:user', user.userProfile);
+app.get('/user/:user', user.userProfile);
+app.get('/users', user.users);
+
+app.get('/category/:category', pages.category);
+app.get('/categories', pages.categories)
+
+app.post('/getContent', function(req, res){
+  if(req.body.startNum != undefined && req.body.endNum != undefined){
+    function doOtherStuff(content){
+      res.send(content);
+    }
+
+    // Gets the categories from the database
+    theDb.getContent(req.body.startNum, req.body.endNum, 'Content.DateTime', function(theContent) {
+      doOtherStuff(theContent);
+    });
+  } else{
+    res.send(undefined);
+  }
+});
+
+app.post('/getContentForCategory', function(req, res){
+  if(req.body.startNum != undefined && req.body.endNum != undefined && req.body.category!=undefined){
+    function doOtherStuff(content){
+      res.send(content);
+    }
+
+    // Gets the categories from the database
+    theDb.getContentForCategory(req.body.startNum, req.body.endNum, req.body.category, 'Content.DateTime', function(theContent) {
+      doOtherStuff(theContent);
+    });
+  } else{
+    res.send(undefined);
+  }
+});
+
+app.post('/getCategories', function(req, res){
+  function doOtherStuff(cat){
+    res.send(cat);
+  }
+
+    // Gets the categories from the database
+  theDb.getCategories(function(theContent) {
+    doOtherStuff(theContent);
+  });
+});
 
 app.post('/upload',  function(req, res) {
-	var theDB = db.database();
-
 	// get the temporary location of the file
     var tmp_path = req.files.theImage.path;
     // set where the file should actually exists - in this case it is in the "images" directory

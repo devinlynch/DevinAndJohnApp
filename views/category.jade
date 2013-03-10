@@ -11,16 +11,17 @@ block content
 
 			//Loads in content received from server
 			theUser = !{JSON.stringify(variable.user)}; 
+			theCategory = !{JSON.stringify(variable.category)}; 
  
-			$.getScript("public/javascripts/load_content.js", function(){
-				loadInContent(theUser, $('#container'));
+			$.getScript("/public/javascripts/load_content.js", function(){
+				loadInContentForCategory(theCategory, theUser, $('#container'));
 			});
 
 			//Sets on click listener for like button of content
 			$(document).delegate("div[id^='likeDiv']", "click", function() {
 				var el = this;
 				console.log('The name is: ' +$(el).attr('name'));
-				$.getScript("public/javascripts/load_content.js", function(){
+				$.getScript("/public/javascripts/load_content.js", function(){
 					haveLikedOrDislikedObject(0, $(el).attr('name'));
 				});
 			});
@@ -29,7 +30,7 @@ block content
 			$(document).delegate("div[id^='dislikeDiv']", "click", function() {
 				var el = this;
 				console.log('The name is: ' +$(el).attr('name'));
-				$.getScript("public/javascripts/load_content.js", function(){
+				$.getScript("/public/javascripts/load_content.js", function(){
 					haveLikedOrDislikedObject(1, $(el).attr('name'));
 				});
 			});

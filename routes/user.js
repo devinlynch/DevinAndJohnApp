@@ -3,15 +3,42 @@ database = require('../db')
 var db = database.database();
 
 exports.userProfile = function(req, res){
+	var userName = req.params.user;
+	var isOkQuery = db.errorCheck(userName);
+	
+	if(isOkQuery && userName != undefined){
+		// Function to do remainder of work after db query is finished
+		doOtherStuff = function(theUser){
+			res.render("user.jade", { title: 'User Profile', variable:{user: theUser} });
+		};
+		
+
+		db.getUserByUsername(req.params.user, function(theUser) {
+			if(theUser != undefined)
+				doOtherStuff(theUser);
+			else
+				sendErrorPage('Error: 120', res);
+	  	});
+	} else{
+		console.log('Something went wrong with loading user profile');
+		sendErrorPage('Error: 121', res)
+	}	
+};
+
+// A page which displays the users
+exports.users = function(req, res){
 	
 	// Function to do remainder of work after db query is finished
-	doOtherStuff = function(theUser){
-		console.log('The userinfo is: ', theUser);
-		res.render("user.jade", { title: 'User Profile', variable:{user: theUser} });
+	doOtherStuff = function(users){
+			res.render("users.jade", { title: 'Users', variable:{users: users} });
 	};
 	
-
-	db.getUserByUsername(req.params.user, function(theUser) {
-		doOtherStuff(theUser);
-  	});	
+	// Gets the categories from the database
+	db.getUsers(0, 100, 'UserID', function(users) {
+		doOtherStuff(users);
+  	});
 };
+
+function sendErrorPage(error, res){
+		res.render("error.jade", {title: 'Error Page', error: error});
+}
