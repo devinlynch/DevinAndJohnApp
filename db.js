@@ -5,13 +5,20 @@ function getDatabase(){
 	// Sets up database
 	var mysql      = require('mysql');
 	var connection = mysql.createConnection({
+		/*host     : 'likeordislike555.db.7757889.hostedresource.com',
+		user     : 'likeordislike555',
+	  	password : 'F2e2dfsd4sss!',
+	  	database : 'likeordislike555',*/
 	  host     : 'localhost',
 	  user     : 'root',
-	  password : 'pass',
+	  password : 'ddnddn',
 	  database : 'n23n7wfhs9a99dd3',
 	});
 	
-	connection.connect();
+	connection.connect(function(err) {
+	});
+
+	
 	
 	// The database object to be returned
 	var db = {};
@@ -36,6 +43,27 @@ function getDatabase(){
 		connection.query(query, function(err, rows, fields) {
 		  if (err){ console.log('ERROR CONNECTING TO MYSQL for db.getCotent - ' +err); callback(undefined); throw err;};
 		  
+		  callback(rows);
+	
+		});
+	}
+
+	db.getContentFromLoggedInUser = function(start, num, order, userID, callback){
+		var query = 
+		'SELECT '+
+		'Content.ContentID, Content.UploaderID, Content.Title, Content.Ratio, Content.DateTime, Content.CategoryID,'+
+		'Likes.UserID, Likes.IsLike, Likes.DateTime AS LikeDateTime,'+
+		'ContentImages.ImageID, ContentImages.FileName, ContentImages.Height, ContentImages.Width '+
+		'FROM Content '+
+		'JOIN ContentImages ON ContentImages.ContentID = Content.ContentID '+
+		'LEFT JOIN Likes ON Likes.ContentID = Content.ContentID '+
+		'AND Likes.UserID='+userID+' '+
+		'ORDER BY '+order+' '+
+		'LIMIT '+start+' , '+num;
+		console.log(query);
+		connection.query(query, function(err, rows, fields) {
+		  if (err){ console.log('ERROR CONNECTING TO MYSQL for db.getContentFromLoggedInUser - ' +err); callback(undefined); throw err;};
+		  console.log(JSON.stringify(rows));
 		  callback(rows);
 	
 		});
@@ -68,8 +96,8 @@ function getDatabase(){
 
 	// Function which gets users info by the userID
 	db.getUserByUsername = function(username, callback) {
-		var query = 'SELECT * from Users JOIN BasicInfo ON Users.userID = BasicInfo.userID'  
-		+' WHERE Users.Username=? LIMIT 1';
+		var query = 'SELECT * from Users LEFT JOIN BasicInfo ON Users.UserID = BasicInfo.UserID'  
+		+' LEFT JOIN UserImages ON Users.UserID=UserImages.UserID WHERE Users.Username=? LIMIT 1';
 		connection.query(query, [username], function(err, rows, fields) {
 		  if (err){ console.log('ERROR CONNECTING TO MYSQL: ' +err); callback(undefined); throw err;};
 		  if(rows!=undefined)
@@ -188,7 +216,7 @@ function getDatabase(){
 		});
 	}
 	
-	// Function which adds content to the database
+	// Function which gets specific content from the database by content ID
 	db.getSpecificContent = function(contentID, callback) {
 		connection.query('SELECT * FROM Content JOIN ContentImages ON Content.ContentID = ContentImages.ContentID' +
 		'AND Content.ContentID =? LIMIT 1', contentID, function(err, rows, fields) {
@@ -199,8 +227,67 @@ function getDatabase(){
 		});
 	}
 
+	// Function which likes content
+	db.likeContent = function(obj, callback) {
+		connection.query('INSERT INTO Likes SET ?', obj, function(err, result) {
+			if (err){ 
+				console.log('A duplicate like was attempted to be added -> '+ err);
+				// If an error is thrown then attempt to update the row 
+				db.updateLike(obj);
+				db.getNumberOfLikes(obj.ContentID, callback);
+			} else{	  
+		  		db.getNumberOfLikes(obj.ContentID, callback);
+		  	}
+		});
+	}
+
+	// Updates a like row to be either a like or a dislike
+	db.updateLike = function(obj) {
+		if(obj != undefined){
+			var query = 'UPDATE Likes SET IsLike='+obj.IsLike+' WHERE UserID='+obj.UserID
+					  + ' AND ContentID='+obj.ContentID;
+			connection.query(query, function(err, result) {
+				if (err){ console.log('Something went wrong: ' +err); }
+			});
+		} 
+	}
+
+	db.getNumberOfLikes = function(contentID, callback) {
+		var query = 'SELECT(SELECT COUNT(*) FROM Likes WHERE ContentID='+contentID+' AND IsLike=1)-'
+				  + '(SELECT COUNT(*) from Likes WHERE ContentID='+contentID+' AND IsLike=0)'
+				  + 'AS SumCount';
+		connection.query(query, function(err, rows, fields) {
+			if (err){ console.log('Error getting count for likes of content: '+ err); callback(undefined); 
+			} else{	  
+				callback(rows[0].SumCount);
+				db.updateNumLikes(contentID, rows[0].SumCount);
+		  	}
+		});
+	}
+
+	// Updates a like row to be either a like or a dislike
+	db.updateNumLikes = function(contentID, num) {
+		if(num != undefined && contentID != undefined){
+			var query = 'UPDATE Content SET Ratio='+num+' WHERE ContentID='+contentID;
+			connection.query(query, function(err, result) {
+				if (err){ console.log('Something went wrong: ' +err); }
+			});
+		} 
+	}
+
 	db.errorCheck = function(query){
 		return true;
+	}
+
+	db.start = function(){
+		connection.connect(function(err) {
+			console.log("Erorr: Unable to bind connecting to database.")
+		});
+	}
+	db.end = function(){
+		connection.end(function(err) {
+  		// The connection is terminated now
+		});
 	}
 		
 	return db;	

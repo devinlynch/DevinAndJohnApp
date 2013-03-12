@@ -67,6 +67,21 @@ app.post('/getContent', function(req, res){
   }
 });
 
+app.post('/getContentFromUser', function(req, res){
+  if(req.body.startNum != undefined && req.body.endNum != undefined && req.body.userID != undefined){
+    function doOtherStuff(content){
+      res.send(content);
+    }
+
+    // Gets the categories from the database
+    theDb.getContentFromLoggedInUser(req.body.startNum, req.body.endNum, 'Content.DateTime', req.body.userID, function(theContent) {
+      doOtherStuff(theContent);
+    });
+  } else{
+    res.send(undefined);
+  }
+});
+
 app.post('/getContentForCategory', function(req, res){
   if(req.body.startNum != undefined && req.body.endNum != undefined && req.body.category!=undefined){
     function doOtherStuff(content){
@@ -93,6 +108,30 @@ app.post('/getCategories', function(req, res){
   });
 });
 
+app.post('/likeContent', function(req, res){
+
+  sendBack = function(numberOfLikes){
+    var sendObj = {
+      numberOfLikes: numberOfLikes
+    }
+    console.log("Sending:"+numberOfLikes );
+    res.send(sendObj);
+  }
+  
+  if(req.body.user != undefined && req.body.content != undefined && req.body.isLike != undefined){
+    var obj = {
+      UserID: req.body.user,
+      ContentID: req.body.content,
+      IsLike: req.body.isLike,
+    };
+    theDb.likeContent(obj, function(numberOfLikes) {
+      sendBack(numberOfLikes);
+    }); 
+  } else{
+    console.log("Post");
+  }
+});
+
 app.post('/upload',  function(req, res) {
 	// get the temporary location of the file
     var tmp_path = req.files.theImage.path;
@@ -117,7 +156,8 @@ app.post('/upload',  function(req, res) {
 			UploaderID: 1,
 			CategoryID: req.body.categories,
 			Likes: 0,
-			Dislikes: 0
+			Dislikes: 0,
+      Ratio: 0
 		};
 		
 		var contentImage = {
@@ -125,7 +165,7 @@ app.post('/upload',  function(req, res) {
 			Height: height,
 			Width: width
 		};
-		theDB.addContent(newContent, contentImage);
+		theDb.addContent(newContent, contentImage);
 
 		console.log(contentImage.FileName + ' ' + contentImage.Height);
 	};

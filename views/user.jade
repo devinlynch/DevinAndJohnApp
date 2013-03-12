@@ -1,5 +1,16 @@
 extends layout
 
 block content
+	script(type='text/javascript')
+		var user = !{JSON.stringify(variable.user)};
+		$.getScript("/public/javascripts/user_profile.js", function(){
+			loadInUser(user);
+		});
+
+
 	center
-		h1= "Welcome"
+		h1= variable.user.Username
+		div(class="UserInfoBox", id="UserInfoBox")
+			p Name: #{variable.user.FirstName} #{variable.user.LastName}
+			p Birthday: #{variable.user.Birthday}
+			p Location: #{variable.user.City}, #{variable.user.Country}

@@ -3,36 +3,42 @@ extends layout
 block content
 	script(type='text/javascript')
 		$(document).ready(function(){
-			//Loads masonry
-			$( '#container' ).masonry( { itemSelector: '.item', 
-				columnWidth:20, 
-				isFitWidth: true
-				} );
-
-			//Loads in content received from server
 			theUser = !{JSON.stringify(variable.user)}; 
- 
-			$.getScript("public/javascripts/load_content.js", function(){
-				loadInContent(theUser, $('#container'));
-			});
 
+			doRest = function(){
+				//Loads masonry
+				$( '#container' ).masonry( { itemSelector: '.item', 
+					columnWidth:20, 
+					isFitWidth: true,
+					isAnimated: true
+				});
+
+				$(window).scroll(function() {
+					if ($(window).scrollTop() == $(document).height() - $(window).height()) {
+						loadInContent(theUser, $('#container'));
+					}
+				});
+
+				
+				//Loads in content received from server
+				loadInContent(theUser, $('#container'));
+			}
+
+			getContent(theUser, doRest);
 			//Sets on click listener for like button of content
 			$(document).delegate("div[id^='likeDiv']", "click", function() {
 				var el = this;
-				console.log('The name is: ' +$(el).attr('name'));
-				$.getScript("public/javascripts/load_content.js", function(){
-					haveLikedOrDislikedObject(0, $(el).attr('name'));
-				});
+				haveLikedOrDislikedObject(0, $(el).attr('name'), theUser);
 			});
 
 			//Sets on click listener for dislike button of content
 			$(document).delegate("div[id^='dislikeDiv']", "click", function() {
 				var el = this;
-				console.log('The name is: ' +$(el).attr('name'));
-				$.getScript("public/javascripts/load_content.js", function(){
-					haveLikedOrDislikedObject(1, $(el).attr('name'));
-				});
+				haveLikedOrDislikedObject(1, $(el).attr('name'), theUser);
 			});
 		});
 	center
 		div(id="container", style="position: relative;", class="masonry")
+
+		nav(id="page-nav")
+			a(href="pages/2.html")

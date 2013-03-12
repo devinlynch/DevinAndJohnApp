@@ -1,14 +1,22 @@
+currentNumberOfContent = 0;
+maxNumberOfContent = 1000;
+currentTotalContent = 0;
+var content;
+
+function getContent(theUser, callback){
+	$.post("/getContentFromUser", { startNum: 0, endNum: maxNumberOfContent, userID: theUser.UserID })
+	.done(function(data) {
+		currentTotalContent = data.length;
+		content = data;
+		callback();
+	});
+}
 // Does the initial load for content
 function loadInContent(theUser, masonryContainer){
-
-	//Sends post request to server to get content
-	$.post("/getContent", { startNum: 0, endNum: 100 })
-	.done(function(data) {
-		if(data != undefined)
-	  		continueLoading(data, masonryContainer);
-	  	else
-	  		noMoreData(masonryContainer);
-	});
+	if(content != undefined && currentNumberOfContent != currentTotalContent)
+		continueLoading(masonryContainer, theUser);
+	//else
+		//noMoreData(masonryContainer);
 }
 
 // Does the initial load for content for a category
@@ -18,7 +26,7 @@ function loadInContentForCategory(category, user, masonryContainer){
 		$.post("/getContentForCategory", { startNum: 0, endNum: 100, category: category.CategoryID })
 		.done(function(data) {
 			if(data != undefined)
-		  		continueLoading(data, masonryContainer);
+		  		continueLoading(data, masonryContainer, user);
 		  	else
 		  		noMoreData(masonryContainer);
 		});
@@ -27,13 +35,17 @@ function loadInContentForCategory(category, user, masonryContainer){
 	}
 }
 
-function continueLoading(data, masonryContainer){
-	console.log(theUser);
-	for(var i = 0; i < data.length; i++) {
-		var content = data[i];
-		appendContent(content, masonryContainer);
+function continueLoading(masonryContainer, theUser){
+	for(var i = currentNumberOfContent; i < currentNumberOfContent+10; i++) {
+		var tempcontent = content[i];
+		if(tempcontent == undefined) {currentNumberOfContent = i; break;}
+		appendContent(tempcontent, masonryContainer);
+		
+		if(tempcontent.IsLike != null)
+			displayHasLike(tempcontent.IsLike, tempcontent.ContentID, tempcontent.Ratio);
 		masonryContainer.masonry('reload')
-	}			
+	}
+	currentNumberOfContent = i;			
 	masonryContainer.masonry('reload')
 }
 
@@ -112,18 +124,40 @@ function getBottom(content){
 	return "";	
 }
 
+
 // Function which handles a user liking or disliking a object
-function haveLikedOrDislikedObject(res, contentNumber){
+function haveLikedOrDislikedObject(res, contentNumber, user){
+	if(user != undefined){
+		if(res == 0){
+			$("#haveLikedDiv_" + contentNumber).text("Processing...");
+			$.post("/likeContent", { content: contentNumber, user: user.UserID, isLike: 1 })
+				.done(function(data) {
+					var numLikes = data.numberOfLikes;
+					displayHasLike(1, contentNumber, numLikes);
+				})
+				.fail(function() { $("#haveLikedDiv_" + contentNumber).text("Error liking this object..."); });
+		} else{
+			$.post("/likeContent", { content: contentNumber, user: user.UserID, isLike: 0 })
+				.done(function(data) {
+					var numLikes = data.numberOfLikes;
+					displayHasLike(0, contentNumber, numLikes);
+				})
+				.fail(function() { $("#haveLikedDiv_" + contentNumber).text("Error liking this object..."); });		}
+	} else{
+		$("#haveLikedDiv_" + contentNumber).text("Sorry, something went wrong.");
+	}
+};
+
+// Updates text to display that you like or dislike a content
+function displayHasLike(hasLike, contentNumber, numLikes){
 	$("#likeAndDislikeDiv_" + contentNumber).fadeOut(400, function(){
 		$("#haveLikedDiv_" + contentNumber).fadeIn(1000);
 		$("#likesVsDislikesDiv_" + contentNumber).fadeIn(1000);
 	});
-	//$("#likesVsDislikesDiv_" + contentNumber).text("+114");
-	if(res == 0){
-		//$.post("likeordislike.php", { id: "1", action: "1" } );
+	if(hasLike == 1)
 		$("#haveLikedDiv_" + contentNumber).text("You like this.");
-	} else{
-		//$.post("likeordislike.php", { id: "1", action: "2" } );
+	else
 		$("#haveLikedDiv_" + contentNumber).text("You dislike this.");
-	}
-};
+
+	$("#likesVsDislikesDiv_" + contentNumber).text(numLikes);
+}

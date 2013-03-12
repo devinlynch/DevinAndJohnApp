@@ -69,6 +69,12 @@ a:active
 	font-size:13px;
 }
 
+.UserInfoBox{
+	width:500px;
+	background-color: #e1e1e1;
+	margin: 5px;
+}
+
 /* ---------------------------- 
 CSS for An Object Box
 ---------------------------- */
